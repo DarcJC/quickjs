@@ -207,7 +207,7 @@ typedef struct JSValue {
     JSValueUnion u;
     int64_t tag;
 } JSValue;
-
+    
 #define JSValueConst JSValue
 
 #define JS_VALUE_GET_TAG(v) ((int32_t)(v).tag)
@@ -220,6 +220,31 @@ typedef struct JSValue {
 
 #define JS_MKVAL(tag, val) (JSValue){ (JSValueUnion){ .int32 = val }, tag }
 #define JS_MKPTR(tag, p) (JSValue){ (JSValueUnion){ .ptr = p }, tag }
+
+#ifdef _MSC_VER
+static inline JSValue __NewValue_WithInt32(int32_t Value, int64_t Tag)
+{
+    JSValue v;
+    v.u = { .int32 = Value };
+    v.tag = Tag;
+    return v;
+}
+    
+static inline JSValue __NewValue_WithPtr(void* Value, int64_t Tag)
+{
+    JSValue v;
+    v.u = { .ptr = Value };
+    v.tag = Tag;
+    return v;
+}
+
+#undef JS_MKVAL
+#undef JS_MKPTR
+
+#define JS_MKVAL(tag, val) __NewValue_WithInt32(val, tag)
+#define JS_MKPTR(tag, p) __NewValue_WithPtr(val, tag)
+#endif
+
 
 #define JS_TAG_IS_FLOAT64(tag) ((unsigned)(tag) == JS_TAG_FLOAT64)
 
@@ -1039,6 +1064,14 @@ typedef struct JSCFunctionListEntry {
 #define JS_OBJECT_DEF(name, tab, len, prop_flags) { name, prop_flags, JS_DEF_OBJECT, 0, .u = { .prop_list = { tab, len } } }
 #define JS_ALIAS_DEF(name, from) { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_ALIAS, 0, .u = { .alias = { from, -1 } } }
 #define JS_ALIAS_BASE_DEF(name, from, base) { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_ALIAS, 0, .u = { .alias = { from, base } } }
+
+#ifdef _MSC_VER
+#undef JS_CFUNC_DEF
+#undef JS_CGETSET_DEF
+
+#define JS_CFUNC_DEF(name, length, func1) { .name = name, .prop_flags = JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, .def_type = JS_DEF_CFUNC, .magic = 0, .u = { .func = { length, JS_CFUNC_generic, { .generic = func1 } } } }
+#define JS_CGETSET_DEF(name, fgetter, fsetter) { .name = name, .prop_flags = JS_PROP_CONFIGURABLE, .def_type = JS_DEF_CGETSET, .magic = 0, .u = { .getset = { .get = { .getter = fgetter }, .set = { .setter = fsetter } } } }
+#endif
 
 void JS_SetPropertyFunctionList(JSContext *ctx, JSValueConst obj,
                                 const JSCFunctionListEntry *tab,
