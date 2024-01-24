@@ -29,6 +29,9 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
+#pragma warning( push )
+#pragma warning( disable: 4576 )
+#pragma warning( disable: 4191 )
 extern "C" {
 #endif
 
@@ -1057,6 +1060,7 @@ int JS_SetModuleExportList(JSContext *ctx, JSModuleDef *m,
 
 #ifdef __cplusplus
 } /* extern "C" { */
+#pragma warning( pop )
 #endif
 
 #endif /* QUICKJS_H */
