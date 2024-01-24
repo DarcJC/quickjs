@@ -9902,6 +9902,15 @@ void JS_ResetUncatchableError(JSContext *ctx)
     JS_SetUncatchableError(ctx, ctx->rt->current_exception, FALSE);
 }
 
+JSValue JS_NewUncatchableError(JSContext *ctx)
+{
+    JSValue obj;
+
+    obj = JS_NewError(ctx);
+    JS_SetUncatchableError(ctx, obj, TRUE);
+    return obj;
+}
+
 void JS_SetOpaque(JSValue obj, void *opaque)
 {
    JSObject *p;
